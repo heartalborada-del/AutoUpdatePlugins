@@ -84,9 +84,13 @@ public class Util {
         }
     }
     public static UpdateInstance getUpdateInstance(
-            int delay, int cycle, Proxy proxy, List<ConfigInstance.Header> headers,
-            AutoUpdatePlugin plugin, List<UpdateItem> items, int poolSize,
-            boolean isCheckSSL) {
+            int delay, int cycle,
+            Proxy proxy,
+            List<ConfigInstance.Header> headers,
+            List<UpdateItem> items,
+            int poolSize,
+            boolean isCheckSSL
+    ) {
         OkHttpClient.Builder builder = new OkHttpClient.Builder();
         builder.proxy(proxy).addInterceptor(new Interceptor() {
                     @NotNull
@@ -127,7 +131,6 @@ public class Util {
                 cycle,
                 builder.build(),
                 items,
-                plugin,
                 poolSize
         );
     }

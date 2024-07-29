@@ -18,13 +18,11 @@ import java.util.List;
 
 public class CommandManager implements CommandExecutor, TabCompleter {
     public final ArrayList<SubCommand> subCommands = new ArrayList<>();
-    private final AutoUpdatePlugin plugin;
 
-    public CommandManager(AutoUpdatePlugin plugin) {
-        this.plugin = plugin;
-        subCommands.add(new reload(plugin));
-        subCommands.add(new update(plugin));
-        subCommands.add(new stop(plugin));
+    public CommandManager() {
+        subCommands.add(new reload());
+        subCommands.add(new update());
+        subCommands.add(new stop());
     }
 
     @Override
@@ -37,12 +35,12 @@ public class CommandManager implements CommandExecutor, TabCompleter {
         for (SubCommand subCommand : subCommands)
             if (subCommand.name.equals(args[0])) {
                 if (!sender.hasPermission(subCommand.permission))
-                    Util.Message(sender, plugin.getMessageManager().getInstance().getNoPermission());
+                    Util.Message(sender, AutoUpdatePlugin.getMessageManager().getInstance().getNoPermission());
                 else
                     subCommand.onCommand(sender, Arrays.copyOfRange(args, 1, args.length));
                 return true;
             }
-        Util.Message(sender, plugin.getMessageManager().getInstance().getNoSuchCommand());
+        Util.Message(sender, AutoUpdatePlugin.getMessageManager().getInstance().getNoSuchCommand());
         return true;
     }
 

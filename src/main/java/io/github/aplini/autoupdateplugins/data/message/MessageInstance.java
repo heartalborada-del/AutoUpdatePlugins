@@ -15,6 +15,7 @@ public class MessageInstance {
     private String StoppingMessage = "Stopping Update Task...";
     private SubCommands commands = new SubCommands();
     private Update update = new Update();
+
     @Getter
     @Setter
     public static class SubCommands {
@@ -39,6 +40,7 @@ public class MessageInstance {
             private String STOP = "/aup stop";
         }
     }
+
     @Getter
     @Setter
     public static class Update {
@@ -55,6 +57,7 @@ public class MessageInstance {
         private String listConfigErrMissing = "Update list configuration error or Missing basic configuration";
         private String fileSizeDifference = "File size difference: Old - {old}bytes, New - {new}bytes.";
         private Github Github = new Github();
+
         @Getter
         @Setter
         public static class Github {

@@ -13,36 +13,33 @@ import java.util.List;
 import static io.github.aplini.autoupdateplugins.utils.Util.getUpdateInstance;
 
 public class stop extends SubCommand {
-    private final AutoUpdatePlugin plugin;
-    public stop(AutoUpdatePlugin plugin) {
+    public stop() {
         this.name = "reload";
         this.permission = "aup.admin";
-        this.usage = plugin.getMessageManager().getInstance().getCommands().getUsage().getSTOP();
-        this.description = plugin.getMessageManager().getInstance().getCommands().getDescription().getSTOP();
-        this.plugin = plugin;
+        this.usage = AutoUpdatePlugin.getMessageManager().getInstance().getCommands().getUsage().getSTOP();
+        this.description = AutoUpdatePlugin.getMessageManager().getInstance().getCommands().getDescription().getSTOP();
     }
     @Override
     public void onCommand(CommandSender sender, String[] args) {
-        Util.Message(sender, plugin.getMessageManager().getInstance().getStoppingMessage());
-        if(!plugin.getUpdateInstance().stop()){
-            Util.Message(sender, plugin.getMessageManager().getInstance().getFailedMessage());
+        Util.Message(sender, AutoUpdatePlugin.getMessageManager().getInstance().getStoppingMessage());
+        if(!AutoUpdatePlugin.getUpdateInstance().stop()){
+            Util.Message(sender, AutoUpdatePlugin.getMessageManager().getInstance().getFailedMessage());
             return;
         }
         Proxy proxy = Proxy.NO_PROXY;
-        ConfigInstance.Proxy p = plugin.getConfigManager().getInstance().getProxy();
+        ConfigInstance.Proxy p = AutoUpdatePlugin.getConfigManager().getInstance().getProxy();
         if(p.getType() != Proxy.Type.DIRECT) {
             proxy = new Proxy(p.getType(), new InetSocketAddress(p.getHost(), p.getPort()));
         }
-        plugin.setUpdateInstance(getUpdateInstance(
-                plugin.getConfigManager().getInstance().getStartupDelay(),
-                plugin.getConfigManager().getInstance().getStartupCycle(),
+        AutoUpdatePlugin.setUpdateInstance(getUpdateInstance(
+                AutoUpdatePlugin.getConfigManager().getInstance().getStartupDelay(),
+                AutoUpdatePlugin.getConfigManager().getInstance().getStartupCycle(),
                 proxy,
-                plugin.getConfigManager().getInstance().getSetRequestProperty(),
-                plugin,
-                plugin.getUpdateDataManager().getInstance().getList(),
-                plugin.getConfigManager().getInstance().getDownloadThreadCount(),
-                plugin.getConfigManager().getInstance().isSslVerify()));
-        Util.Message(sender, plugin.getMessageManager().getInstance().getStoppedMessage());
+                AutoUpdatePlugin.getConfigManager().getInstance().getSetRequestProperty(),
+                AutoUpdatePlugin.getUpdateDataManager().getInstance().getList(),
+                AutoUpdatePlugin.getConfigManager().getInstance().getDownloadThreadCount(),
+                AutoUpdatePlugin.getConfigManager().getInstance().isSslVerify()));
+        Util.Message(sender, AutoUpdatePlugin.getMessageManager().getInstance().getStoppedMessage());
     }
 
     @Override
@@ -52,7 +49,7 @@ public class stop extends SubCommand {
 
     @Override
     public void reloadMessage() {
-        this.usage = plugin.getMessageManager().getInstance().getCommands().getUsage().getSTOP();
-        this.description = plugin.getMessageManager().getInstance().getCommands().getDescription().getSTOP();
+        this.usage = AutoUpdatePlugin.getMessageManager().getInstance().getCommands().getUsage().getSTOP();
+        this.description = AutoUpdatePlugin.getMessageManager().getInstance().getCommands().getDescription().getSTOP();
     }
 }

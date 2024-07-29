@@ -13,41 +13,38 @@ import java.util.List;
 import static io.github.aplini.autoupdateplugins.utils.Util.getUpdateInstance;
 
 public class reload extends SubCommand {
-    private final AutoUpdatePlugin plugin;
 
-    public reload(AutoUpdatePlugin plugin) {
+    public reload() {
         this.name = "reload";
         this.permission = "aup.admin";
-        this.usage = plugin.getMessageManager().getInstance().getCommands().getUsage().getRELOAD();
-        this.description = plugin.getMessageManager().getInstance().getCommands().getDescription().getRELOAD();
-        this.plugin = plugin;
+        this.usage = AutoUpdatePlugin.getMessageManager().getInstance().getCommands().getUsage().getRELOAD();
+        this.description = AutoUpdatePlugin.getMessageManager().getInstance().getCommands().getDescription().getRELOAD();
     }
 
     @Override
     public void onCommand(CommandSender sender, String[] args) {
-        Util.Message(sender, plugin.getMessageManager().getInstance().getReloadMessage());
-        plugin.getConfigManager().reload();
-        plugin.getMessageManager().reload();
-        plugin.getCommandManager().reload();
-        plugin.getUpdateDataManager().reload();
-        plugin.getTempDataManager().save();
-        if(plugin.getUpdateInstance().stop()) {
+        Util.Message(sender, AutoUpdatePlugin.getMessageManager().getInstance().getReloadMessage());
+        AutoUpdatePlugin.getConfigManager().reload();
+        AutoUpdatePlugin.getMessageManager().reload();
+        AutoUpdatePlugin.getCommandManager().reload();
+        AutoUpdatePlugin.getUpdateDataManager().reload();
+        AutoUpdatePlugin.getTempDataManager().save();
+        if(AutoUpdatePlugin.getUpdateInstance().stop()) {
             Proxy proxy = Proxy.NO_PROXY;
-            ConfigInstance.Proxy p = plugin.getConfigManager().getInstance().getProxy();
+            ConfigInstance.Proxy p = AutoUpdatePlugin.getConfigManager().getInstance().getProxy();
             if(p.getType() != Proxy.Type.DIRECT) {
                 proxy = new Proxy(p.getType(), new InetSocketAddress(p.getHost(), p.getPort()));
             }
-            plugin.setUpdateInstance(getUpdateInstance(
-                    plugin.getConfigManager().getInstance().getStartupDelay(),
-                    plugin.getConfigManager().getInstance().getStartupCycle(),
+            AutoUpdatePlugin.setUpdateInstance(getUpdateInstance(
+                    AutoUpdatePlugin.getConfigManager().getInstance().getStartupDelay(),
+                    AutoUpdatePlugin.getConfigManager().getInstance().getStartupCycle(),
                     proxy,
-                    plugin.getConfigManager().getInstance().getSetRequestProperty(),
-                    plugin,
-                    plugin.getUpdateDataManager().getInstance().getList(),
-                    plugin.getConfigManager().getInstance().getDownloadThreadCount(),
-                    plugin.getConfigManager().getInstance().isSslVerify()));
+                    AutoUpdatePlugin.getConfigManager().getInstance().getSetRequestProperty(),
+                    AutoUpdatePlugin.getUpdateDataManager().getInstance().getList(),
+                    AutoUpdatePlugin.getConfigManager().getInstance().getDownloadThreadCount(),
+                    AutoUpdatePlugin.getConfigManager().getInstance().isSslVerify()));
         }
-        Util.Message(sender, plugin.getMessageManager().getInstance().getSuccessMessage());
+        Util.Message(sender, AutoUpdatePlugin.getMessageManager().getInstance().getSuccessMessage());
     }
 
     @Override
@@ -57,7 +54,7 @@ public class reload extends SubCommand {
 
     @Override
     public void reloadMessage() {
-        this.usage = plugin.getMessageManager().getInstance().getCommands().getUsage().getRELOAD();
-        this.description = plugin.getMessageManager().getInstance().getCommands().getDescription().getRELOAD();
+        this.usage = AutoUpdatePlugin.getMessageManager().getInstance().getCommands().getUsage().getRELOAD();
+        this.description = AutoUpdatePlugin.getMessageManager().getInstance().getCommands().getDescription().getRELOAD();
     }
 }

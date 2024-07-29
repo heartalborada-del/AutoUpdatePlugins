@@ -3,7 +3,6 @@ package io.github.aplini.autoupdateplugins.update;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.gson.Gson;
 import io.github.aplini.autoupdateplugins.AutoUpdatePlugin;
-import io.github.aplini.autoupdateplugins.LogLevel;
 import io.github.aplini.autoupdateplugins.beans.CurseForge.CurseForgeData;
 import io.github.aplini.autoupdateplugins.beans.Github.GithubAPI;
 import io.github.aplini.autoupdateplugins.beans.Github.GithubAsset;
@@ -42,10 +41,8 @@ import static io.github.aplini.autoupdateplugins.utils.Util.*;
 public class UpdateInstance {
     private final ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(8);
     private final _scheduleTask task;
-    private final AutoUpdatePlugin plugin;
-    public UpdateInstance(int delay, int interval, OkHttpClient client, List<UpdateItem> items, AutoUpdatePlugin plugin, int poolSize) {
-        this.plugin = plugin;
-        task = new _scheduleTask(items, client, plugin, poolSize);
+    public UpdateInstance(int delay, int interval, OkHttpClient client, List<UpdateItem> items, int poolSize) {
+        task = new _scheduleTask(items, client, poolSize);
         scheduledExecutorService.scheduleAtFixedRate(task, delay, interval, java.util.concurrent.TimeUnit.SECONDS);
     }
 
@@ -55,7 +52,7 @@ public class UpdateInstance {
     }
     public void run(CommandSender sender) {
         if(task.checkIsRunning()) {
-            Util.Message(sender, plugin.getMessageManager().getInstance().getUpdate().getErrStartRepeatedly());
+            Util.Message(sender, AutoUpdatePlugin.getMessageManager().getInstance().getUpdate().getErrStartRepeatedly());
             return;
         }
         scheduledExecutorService.schedule(task,0, TimeUnit.SECONDS);
@@ -64,7 +61,6 @@ public class UpdateInstance {
     private class  _scheduleTask implements Runnable {
         final List<UpdateItem> items;
         final OkHttpClient client;
-        final AutoUpdatePlugin plugin;
         final int poolSize;
         final AtomicBoolean isUpdating = new AtomicBoolean(false);
         @Getter
@@ -72,10 +68,9 @@ public class UpdateInstance {
         @Getter
         final ExecutorService executor;
 
-        private _scheduleTask(List<UpdateItem> items, OkHttpClient client, AutoUpdatePlugin plugin, int poolSize) {
+        private _scheduleTask(List<UpdateItem> items, OkHttpClient client, int poolSize) {
             this.items = items;
             this.client = client;
-            this.plugin = plugin;
             this.poolSize = poolSize;
             executor = Executors.newFixedThreadPool(
                     poolSize,
@@ -85,16 +80,16 @@ public class UpdateInstance {
         @Override
         public void run() {
             if (checkIsRunning()){
-                plugin.log(LogLevel.WARN, plugin.getMessageManager().getInstance().getUpdate().getErrStartRepeatedly());
+                AutoUpdatePlugin.get_logger().log(Level.WARNING, AutoUpdatePlugin.getMessageManager().getInstance().getUpdate().getErrStartRepeatedly());
                 return;
             } else {
                 processed.clear();
                 isUpdating.set(false);
             }
-            plugin.log(LogLevel.DEBUG, plugin.getMessageManager().getInstance().getUpdate().getChecking());
+            AutoUpdatePlugin.get_logger().log(Level.INFO, AutoUpdatePlugin.getMessageManager().getInstance().getUpdate().getChecking());
             isUpdating.set(true);
             for (UpdateItem item : items)
-                executor.submit(new _updateTask(item, client.newBuilder().build(), plugin.getMessageManager(), plugin, processed));
+                executor.submit(new _updateTask(item, client.newBuilder().build(), AutoUpdatePlugin.getMessageManager(), processed));
         }
 
         private boolean checkIsRunning() {
@@ -107,7 +102,7 @@ public class UpdateInstance {
         }
 
         private record _updateTask(UpdateItem item, OkHttpClient client,
-                                   MessageManager messageManager, AutoUpdatePlugin plugin,
+                                   MessageManager messageManager,
                                    ConcurrentHashMap<UpdateItem, Boolean> processed
                                    ) implements Runnable {
             @Override
@@ -117,7 +112,7 @@ public class UpdateInstance {
                         processed.put(item,false);
                         return;
                     }
-                    plugin.getLogger().log(Level.WARNING,String.format("[%s][%s] ",
+                    AutoUpdatePlugin.get_logger().log(Level.WARNING,String.format("[%s][%s] ",
                             Thread.currentThread().getName(),
                             item.getFile()
                     ) + e.getMessage(), e);
@@ -125,8 +120,8 @@ public class UpdateInstance {
                 });
                 String _updatePath, _filePath,_tempPath;
                 if(item.getFile().isEmpty() || item.getUrl().isEmpty()) {
-                    plugin.log(LogLevel.WARN, String.format("[%s][%s] %s",Thread.currentThread().getName(), item.getFile(),
-                            plugin.getMessageManager().getInstance().getUpdate().getListConfigErrMissing()
+                    AutoUpdatePlugin.get_logger().log(Level.WARNING, String.format("[%s][%s] %s",Thread.currentThread().getName(), item.getFile(),
+                            AutoUpdatePlugin.getMessageManager().getInstance().getUpdate().getListConfigErrMissing()
                     ));
                     processed.put(item,false);
                     return;
@@ -136,25 +131,25 @@ public class UpdateInstance {
                     getPath(tempMatcher.group(1));
                     _updatePath = item.getFile();
                     _filePath = item.getFile();
-                    _tempPath = String.valueOf(new File(getPath(plugin.getConfigManager().getInstance().getPaths().getTempPath()), tempMatcher.group(2)));
+                    _tempPath = String.valueOf(new File(getPath(AutoUpdatePlugin.getConfigManager().getInstance().getPaths().getTempPath()), tempMatcher.group(2)));
                 } else if (item.getPath() != null) {
                     _updatePath = String.valueOf(new File(getPath(item.getPath()), item.getFile()));
                     _filePath = _updatePath;
-                    _tempPath = String.valueOf(new File(getPath(plugin.getConfigManager().getInstance().getPaths().getTempPath()),item.getFile()));
+                    _tempPath = String.valueOf(new File(getPath(AutoUpdatePlugin.getConfigManager().getInstance().getPaths().getTempPath()),item.getFile()));
                 } else {
-                    _updatePath = String.valueOf(new File(getPath(getNonNullString(item.getUpdatePath(),plugin.getConfigManager().getInstance().getPaths().getUpdatePath(),"")), item.getFile()));
-                    _filePath = String.valueOf(new File(getPath(getNonNullString(item.getFilePath(),plugin.getConfigManager().getInstance().getPaths().getFilePath(),"")), item.getFile()));
-                    _tempPath = String.valueOf(new File(getPath(getNonNullString(item.getTempPath(),plugin.getConfigManager().getInstance().getPaths().getTempPath(),"")), item.getFile()));
+                    _updatePath = String.valueOf(new File(getPath(getNonNullString(item.getUpdatePath(), AutoUpdatePlugin.getConfigManager().getInstance().getPaths().getUpdatePath(),"")), item.getFile()));
+                    _filePath = String.valueOf(new File(getPath(getNonNullString(item.getFilePath(), AutoUpdatePlugin.getConfigManager().getInstance().getPaths().getFilePath(),"")), item.getFile()));
+                    _tempPath = String.valueOf(new File(getPath(getNonNullString(item.getTempPath(), AutoUpdatePlugin.getConfigManager().getInstance().getPaths().getTempPath(),"")), item.getFile()));
                 }
                 String url = item.getUrl().replaceAll("/$", "");
                 URLType type = getUrlType(url);
-                plugin.log(
-                        LogLevel.DEBUG,
+                AutoUpdatePlugin.get_logger().log(
+                        Level.INFO,
                         String.format(
                                 "[%s][%s] %s",
                                 Thread.currentThread().getName(),
                                 item.getFile(),
-                                plugin.getMessageManager()
+                                AutoUpdatePlugin.getMessageManager()
                                         .getInstance().getUpdate()
                                         .getSucceedGetType()
                                         .replace("{type}", type.name())
@@ -164,28 +159,28 @@ public class UpdateInstance {
                 try {
                     String downloadURL = getDownloadUrl(type, url);
                     if(downloadURL == null) {
-                        plugin.log(
-                                LogLevel.WARN,
+                        AutoUpdatePlugin.get_logger().log(
+                                Level.WARNING,
                                 String.format(
                                         "[%s][%s][%s] %s",
                                         Thread.currentThread().getName(),
                                         type.name(),
                                         item.getFile(),
-                                        plugin.getMessageManager()
+                                        AutoUpdatePlugin.getMessageManager()
                                                 .getInstance().getUpdate()
                                                 .getNoFileMatching()
                                 ));
                         processed.put(item,false);
                         return;
                     } else {
-                        plugin.log(
-                                LogLevel.DEBUG,
+                        AutoUpdatePlugin.get_logger().log(
+                                Level.INFO,
                                 String.format(
                                         "[%s][%s][%s] %s",
                                         Thread.currentThread().getName(),
                                         type.name(),
                                         item.getFile(),
-                                        plugin.getMessageManager()
+                                        AutoUpdatePlugin.getMessageManager()
                                                 .getInstance().getUpdate()
                                                 .getFindDownloadUrl().replace("{url}",downloadURL)
                                 ));
@@ -211,29 +206,29 @@ public class UpdateInstance {
                             }
                         }
                         if(
-                                (plugin.getConfigManager().getInstance().isZipFileCheck() || item.isZipFileCheck())
+                                (AutoUpdatePlugin.getConfigManager().getInstance().isZipFileCheck() || item.isZipFileCheck())
                                         && Pattern.compile(
-                                        plugin.getConfigManager().getInstance().getZipFileCheckPattern()
+                                        AutoUpdatePlugin.getConfigManager().getInstance().getZipFileCheckPattern()
                                 ).matcher(item.getFile()).find()
                         ) {
                             if(!isJARFileIntact(_tempPath)) {
                                 new File(_tempPath).delete();
-                                plugin.log(
-                                        LogLevel.DEBUG,
+                                AutoUpdatePlugin.get_logger().log(
+                                        Level.INFO,
                                         String.format(
                                                 "[%s][%s][%s] %s",
                                                 Thread.currentThread().getName(),
                                                 type.name(),
                                                 item.getFile(),
-                                                plugin.getMessageManager().getInstance().getUpdate().getZipFileCheck()
+                                                AutoUpdatePlugin.getMessageManager().getInstance().getUpdate().getZipFileCheck()
                                         ));
                                 processed.put(item,false);
                                 return;
                             }
                         }
-                        if(plugin.getConfigManager().getInstance().isEnablePreviousUpdate()) {
+                        if(AutoUpdatePlugin.getConfigManager().getInstance().isEnablePreviousUpdate()) {
                             String sha1 = calculateSHA1(new File(_tempPath));
-                            plugin.getTempDataManager().getTempDataMap().put(
+                            AutoUpdatePlugin.getTempDataManager().getInstance().put(
                                     item.getFile(),
                                     new TempData(
                                             item.getFile(),
@@ -249,7 +244,7 @@ public class UpdateInstance {
                         throw e;
                     }
                 } catch (IOException | NoSuchAlgorithmException e) {
-                    plugin.getLogger().log(Level.WARNING,String.format("[%s][%s][%s] ",
+                    AutoUpdatePlugin.get_logger().log(Level.WARNING,String.format("[%s][%s][%s] ",
                             Thread.currentThread().getName(),
                             type.name(),
                             item.getFile()
@@ -257,18 +252,18 @@ public class UpdateInstance {
                     processed.put(item,false);
                     return;
                 }
-                if(plugin.getConfigManager().getInstance().isIgnoreDuplicates() && item.isIgnoreDuplicates()) {
+                if(AutoUpdatePlugin.getConfigManager().getInstance().isIgnoreDuplicates() && item.isIgnoreDuplicates()) {
                     try {
                         String tmpSHA1 = calculateSHA1(new File(_tempPath));
                         String originSHA1 = calculateSHA1(new File(_updatePath));
                         if (tmpSHA1.equalsIgnoreCase(originSHA1)) {
-                            plugin.log(
-                                    LogLevel.DEBUG,
+                            AutoUpdatePlugin.get_logger().log(
+                                    Level.INFO,
                                     String.format(
                                         "[%s][%s][%s] %s",
                                         Thread.currentThread().getName(),
                                         type.name(),
-                                        item.getFile(),plugin.getMessageManager().getInstance().getUpdate().getTempAlreadyLatest()
+                                        item.getFile(), AutoUpdatePlugin.getMessageManager().getInstance().getUpdate().getTempAlreadyLatest()
                             ));
                             processed.put(item,false);
                             return;
@@ -280,16 +275,16 @@ public class UpdateInstance {
                     try {
                         Files.move(Path.of(_tempPath), Path.of(_updatePath), StandardCopyOption.REPLACE_EXISTING);
                     } catch (IOException e) {
-                        plugin.getLogger().log(Level.SEVERE, e.getMessage(), e);
+                        AutoUpdatePlugin.get_logger().log(Level.SEVERE, e.getMessage(), e);
                         processed.put(item,false);
                         return;
                     }
-                    plugin.log(LogLevel.DEBUG,
+                    AutoUpdatePlugin.get_logger().log(Level.INFO,
                             String.format(
                                     "[%s][%s][%s] %s",
                                     Thread.currentThread().getName(),
                                     type.name(),
-                                    item.getFile(),plugin.getMessageManager().getInstance().getUpdate().getFileSizeDifference()
+                                    item.getFile(), AutoUpdatePlugin.getMessageManager().getInstance().getUpdate().getFileSizeDifference()
                                             .replace("{old}",Long.toString(oldFileSize))
                                             .replace("{new}",Long.toString(newFileSize))
                             ));
@@ -307,14 +302,14 @@ public class UpdateInstance {
                             ).build()).execute()) {
                                 if(resp.code() != 200 || resp.body() == null) {
                                     String[] split = matcher.group(0).split("\\\\");
-                                    plugin.log(
-                                            LogLevel.WARN,
+                                    AutoUpdatePlugin.get_logger().log(
+                                            Level.WARNING,
                                             String.format(
                                                     "[%s][%s][%s]%s",
                                                     Thread.currentThread().getName(),
                                                     type.name(),
                                                     item.getFile(),
-                                                    plugin.getMessageManager()
+                                                    AutoUpdatePlugin.getMessageManager()
                                                             .getInstance().getUpdate()
                                                             .getGithub()
                                                             .getRepoNotFound()
@@ -448,7 +443,7 @@ public class UpdateInstance {
                                 break;
                             }
                     } catch (IOException e) {
-                        plugin.getLogger().log(Level.SEVERE,e.getMessage(),e);
+                        AutoUpdatePlugin.get_logger().log(Level.SEVERE,e.getMessage(),e);
                     }
                 }
                 return type;

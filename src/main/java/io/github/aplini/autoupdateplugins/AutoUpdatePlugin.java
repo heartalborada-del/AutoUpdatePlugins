@@ -12,33 +12,40 @@ import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
 import java.util.List;
 import java.util.Objects;
+import java.util.logging.Logger;
 
 
 public class AutoUpdatePlugin extends JavaPlugin {
     @Getter
-    private final ConfigManager configManager = new ConfigManager(this);
+    private static ConfigManager configManager;
     @Getter
-    private final CommandManager commandManager;
+    private static MessageManager messageManager;
     @Getter
-    private final MessageManager messageManager;
+    private static CommandManager commandManager;
     @Getter
-    private final TempDataManager tempDataManager = new TempDataManager(this);
+    private static TempDataManager tempDataManager;
     @Getter
-    private final UpdateDataManager updateDataManager;
+    private static UpdateDataManager updateDataManager;
     @Getter
     @Setter
-    private UpdateInstance updateInstance;
+    private static UpdateInstance updateInstance;
+    @Getter
+    private static Logger _logger;
     {
+        _logger = getLogger();
         try {
-            messageManager = new MessageManager(configManager.getInstance().getLanguage(), this);
-            updateDataManager = new UpdateDataManager(configManager.getInstance().getLanguage(), this);
-            commandManager = new CommandManager(this);
+            configManager = new ConfigManager(this.getDataFolder());
+            messageManager = new MessageManager(this.getDataFolder(), configManager.getInstance().getLanguage());
+            updateDataManager = new UpdateDataManager(this.getDataFolder(), configManager.getInstance().getLanguage());
+            tempDataManager = new TempDataManager(getDataFolder());
+            commandManager = new CommandManager();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -52,7 +59,6 @@ public class AutoUpdatePlugin extends JavaPlugin {
                 configManager.getInstance().getStartupCycle(),
                 proxy,
                 configManager.getInstance().getSetRequestProperty(),
-                this,
                 updateDataManager.getInstance().getList(),
                 configManager.getInstance().getDownloadThreadCount(),
                 configManager.getInstance().isSslVerify());
@@ -70,23 +76,5 @@ public class AutoUpdatePlugin extends JavaPlugin {
         configManager.save();
         tempDataManager.save();
         updateInstance.stop();
-    }
-
-    public void log(LogLevel level, String text) {
-        if (configManager.getInstance().getLogLevel().contains(level.name())) {
-            switch (level.getName()) {
-                case "DEBUG", "INFO":
-                    getLogger().info(text);
-                    break;
-                case "MARK":
-                    // 一些新版本的控制台似乎很难显示颜色
-                    Bukkit.getConsoleSender().sendMessage(level.getColor() + "[AUP] " + text);
-                    break;
-                case "WARN", "NET_WARN":
-                    getLogger().warning(text);
-                    break;
-            }
-        }
-        //logList.add(level.color + (level.name.equals("INFO") ? "" : _fileName) + text);
     }
 }

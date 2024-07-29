@@ -8,17 +8,15 @@ import org.bukkit.command.CommandSender;
 import java.util.List;
 
 public class update extends SubCommand {
-    private final AutoUpdatePlugin plugin;
-    public update(AutoUpdatePlugin plugin) {
+    public update() {
         this.name = "update";
         this.permission = "aup.admin";
-        this.usage = plugin.getMessageManager().getInstance().getCommands().getUsage().getUPDATE();
-        this.description = plugin.getMessageManager().getInstance().getCommands().getDescription().getUPDATE();
-        this.plugin = plugin;
+        this.usage = AutoUpdatePlugin.getMessageManager().getInstance().getCommands().getUsage().getUPDATE();
+        this.description = AutoUpdatePlugin.getMessageManager().getInstance().getCommands().getDescription().getUPDATE();
     }
     @Override
     public void onCommand(CommandSender sender, String[] args) {
-        plugin.getUpdateInstance().run(sender);
+        AutoUpdatePlugin.getUpdateInstance().run(sender);
     }
 
     @Override
@@ -28,7 +26,7 @@ public class update extends SubCommand {
 
     @Override
     public void reloadMessage() {
-        this.usage = plugin.getMessageManager().getInstance().getCommands().getUsage().getUPDATE();
-        this.description = plugin.getMessageManager().getInstance().getCommands().getDescription().getUPDATE();
+        this.usage = AutoUpdatePlugin.getMessageManager().getInstance().getCommands().getUsage().getUPDATE();
+        this.description = AutoUpdatePlugin.getMessageManager().getInstance().getCommands().getDescription().getUPDATE();
     }
 }
