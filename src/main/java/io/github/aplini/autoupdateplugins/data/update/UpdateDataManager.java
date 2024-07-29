@@ -8,6 +8,7 @@ import org.yaml.snakeyaml.TypeDescription;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -27,7 +28,12 @@ public class UpdateDataManager extends YamlManager<UpdateDataManager.Instance> {
 
     @Override
     public String getResourcePath() {
-        return "update/" + language + ".yml";
+        try {
+            InputStream is = getClass().getClassLoader().getResourceAsStream("message/" + language + ".yml");
+            if(is != null)
+                return "update/" + language + ".yml";
+        } catch (Exception ignored){}
+        return "update/zh-CN.yml";
     }
     @Setter
     @Getter

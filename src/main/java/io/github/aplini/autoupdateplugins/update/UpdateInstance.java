@@ -108,7 +108,7 @@ public class UpdateInstance {
             @Override
             public void run() {
                 Thread.currentThread().setUncaughtExceptionHandler((t, e) -> {
-                    if(e instanceof InterruptedException){
+                    if(e instanceof InterruptedException || e instanceof InterruptedIOException){
                         processed.put(item,false);
                         return;
                     }
@@ -297,7 +297,7 @@ public class UpdateInstance {
                     case Github -> {
                         Matcher matcher = Pattern.compile("/([^/]+)/([^/]+)$").matcher(url);
                         if(matcher.find()) {
-                            try (Response resp = client.newCall(new Request.Builder().head().url(
+                            try (Response resp = client.newCall(new Request.Builder().url(
                                     "https://api.github.com/repos" + matcher.group(0) + "/releases/latest"
                             ).build()).execute()) {
                                 if(resp.code() != 200 || resp.body() == null) {
@@ -338,12 +338,12 @@ public class UpdateInstance {
                         }
                     }
                     case Jenkins -> {
-                        try (Response resp = client.newCall(new Request.Builder().head().url(
+                        try (Response resp = client.newCall(new Request.Builder().url(
                                 url + "/lastSuccessfulBuild/api/json"
                         ).build()).execute()) {
                             if(resp.code() != 200 || resp.body() == null)
                                 return null;
-                            JenkinsAPI deSerialized = new Gson().fromJson(Objects.requireNonNull(resp.body()).string(), JenkinsAPI.class);
+                            JenkinsAPI deSerialized = new Gson().fromJson(resp.body().string(), JenkinsAPI.class);
                             for (JenkinsArtifact artifact : deSerialized.getArtifacts()) {
                                 if (item.getFileNamePattern().isEmpty() || Pattern.compile(item.getFileNamePattern()).matcher(artifact.getFileName()).matches()) {
                                     return url +"/lastSuccessfulBuild/artifact/"+ artifact.getRelativePath();
@@ -361,7 +361,7 @@ public class UpdateInstance {
                     case Modrinth -> {
                         Matcher matcher = Pattern.compile("/([^/]+)$").matcher(url);
                         if(matcher.find()) {
-                            try (Response resp = client.newCall(new Request.Builder().head().url(
+                            try (Response resp = client.newCall(new Request.Builder().url(
                                     "https://api.modrinth.com/v2/project"+ matcher.group(0) +"/version"
                             ).build()).execute()) {
                                 if (resp.code() != 200 || resp.body() == null)
@@ -390,14 +390,14 @@ public class UpdateInstance {
                         return url + "/download";
                     }
                     case CurseForge -> {
-                        try (Response htmlResp = client.newCall(new Request.Builder().head().url(url).build()).execute()) {
+                        try (Response htmlResp = client.newCall(new Request.Builder().url(url).build()).execute()) {
                             if (htmlResp.code() != 200 || htmlResp.body() == null)
                                 return null;
                             String[] lines = htmlResp.body().string().split("<a");
                             for(String li : lines){
                                 Matcher matcher = Pattern.compile("data-project-id=\"([0-9]+)\"").matcher(li);
                                 if(matcher.find()) {
-                                    try (Response resp = client.newCall(new Request.Builder().head().url("https://api.curseforge.com/servermods/files?projectIds="+ matcher.group(1)).build()).execute()) {
+                                    try (Response resp = client.newCall(new Request.Builder().url("https://api.curseforge.com/servermods/files?projectIds="+ matcher.group(1)).build()).execute()) {
                                         if (resp.code() != 200 || resp.body() == null)
                                             return null;
                                         CurseForgeData[] data = new Gson().fromJson(resp.body().string(), CurseForgeData[].class);

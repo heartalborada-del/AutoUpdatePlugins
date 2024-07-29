@@ -14,7 +14,7 @@ import static io.github.aplini.autoupdateplugins.utils.Util.getUpdateInstance;
 
 public class stop extends SubCommand {
     public stop() {
-        this.name = "reload";
+        this.name = "stop";
         this.permission = "aup.admin";
         this.usage = AutoUpdatePlugin.getMessageManager().getInstance().getCommands().getUsage().getSTOP();
         this.description = AutoUpdatePlugin.getMessageManager().getInstance().getCommands().getDescription().getSTOP();

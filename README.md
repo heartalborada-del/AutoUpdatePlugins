@@ -30,6 +30,7 @@
 - [x] 自定义输出日志等级
 - [x] 多语言支持!
 - [ ] 支持更新时运行系统命令
+- [ ] 支持更新后运行自定义lua脚本
 
 
 [[使用量统计]](https://bstats.org/plugin/bukkit/ApliNi-AutoUpdatePlugins/20629)
